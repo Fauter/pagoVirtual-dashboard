@@ -10,6 +10,7 @@
       const [error, setError] = useState(null);
       const [loading, setLoading] = useState(true);
       const [openId, setOpenId] = useState(null);
+      const [simulacionDias, setSimulacionDias] = useState(1);
     
       useEffect(() => {
         const fetchUsers = async () => {
@@ -37,6 +38,31 @@
 
       const toggleAhorros = (id) => {
         setOpenId(openId === id ? null : id);
+      };
+
+      const simularDia = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('No hay token disponible. Debes iniciar sesión.');
+          return;
+        }
+    
+        try {
+          const response = await axios.post(
+            'http://192.168.100.6:5000/api/simular-dia',
+            { dias: simulacionDias }, 
+            {
+              headers: {
+                'x-auth-token': token,
+              },
+            }
+          );
+          const nuevaFecha = response.data.fecha;
+          alert('Simulación de día ejecutada: ' + nuevaFecha);
+        } catch (error) {
+          console.error('Error al simular el día:', error);
+          setError('Error al simular el día: ' + (error.response?.data || error.message));
+        }
       };
 
       const eliminarAhorro = async (ahorroId) => {
@@ -81,13 +107,14 @@
                         </div>
                         </div>
                         <div className="pb-3">
-                        <div className="flex border-b border-[#d0dbe7] px-4 gap-8">
-                            {["Usuarios", "Ahorros", "Overview"].map((item) => (
-                            <a key={item} className={`flex flex-col items-center justify-center border-b-[3px] text-sm font-bold leading-normal pb-[13px] pt-4 ${item === "Usuarios" ? "border-b-[#1980e6] text-[#0e141b]" : "border-b-transparent text-[#4e7397]"}`} href="#">
-                                <p>{item}</p>
-                            </a>
-                            ))}
-                        </div>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={simularDia}
+                                    className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                                >
+                                    Simular Día
+                                </button>
+                            </div>
                         </div>
                         <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Usuarios</h2>
                         <div className="px-4 py-3">
@@ -130,19 +157,19 @@
                                                 <td className="px-4 py-3 border-t border-[#d0dbe7] text-sm font-medium leading-normal text-center">{user.ahorros.length}</td>
                                                 <td className="px-4 py-3 border-t border-[#d0dbe7] text-center">
                                                 <button 
-                                                    onClick={() => toggleAhorros(user._id)} // Maneja el clic para abrir/cerrar
+                                                    onClick={() => toggleAhorros(user._id)} 
                                                     className="text-blue-500 hover:text-blue-700 font-medium"
                                                 >
                                                     Ver
                                                 </button>
                                                 </td>
                                             </tr>
-                                            {openId === user._id && ( // Muestra la pestañita si el ID está abierto
+                                            {openId === user._id && ( 
                                                 <tr>
                                                     <td colSpan={5} className="px-4 py-3 border-t border-[#d0dbe7] text-sm font-medium leading-normal">
                                                         <div className="p-4 bg-gray-100 rounded">
                                                             <h4 className="font-semibold mb-3">Ahorros de {user.firstName} {user.lastName}:</h4>
-                                                                {user.ahorros.length === 0 ? ( // Comprueba si hay ahorros
+                                                                {user.ahorros.length === 0 ? ( 
                                                                         <p className="text-gray-500">No hay ahorros disponibles para este usuario.</p>
                                                                     ) : (
                                                                 <table className="min-w-full bg-white rounded shadow">
@@ -166,7 +193,11 @@
                                                                                 </td>
                                                                                 <td className="px-4 py-2 text-sm text-gray-700">
                                                                                     <button 
-                                                                                        onClick={() => eliminarAhorro(ahorro._id)} // Llama a la función de eliminar
+                                                                                        onClick={() => {
+                                                                                            if (window.confirm("¿Estás seguro de que deseas eliminar este ahorro?")) {
+                                                                                                eliminarAhorro(ahorro._id); 
+                                                                                            }
+                                                                                        }}
                                                                                         className="text-red-600 hover:text-red-800 focus:outline-none"
                                                                                     >
                                                                                         Eliminar

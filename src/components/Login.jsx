@@ -37,7 +37,6 @@ const Login = ({ setIsAuthenticated }) => {
       const data = await response.json();
       console.log("Inicio de sesión exitoso:", data);
 
-      // Guardar el token y actualizar el estado de autenticación en App
       localStorage.setItem('token', data.token);
       setIsAuthenticated(true);
       navigate('/dashboard');
