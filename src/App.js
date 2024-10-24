@@ -13,7 +13,7 @@ const App = () => {
   const checkAuthentication = async () => {
     if (token) {
       try {
-        const response = await axios.get('http://192.168.100.6:5000/api/auth/profile', {
+        const response = await axios.get('http://https://api.ahorrovirtual.com/api/auth/profile', {
           headers: {
             'x-auth-token': token,
           },

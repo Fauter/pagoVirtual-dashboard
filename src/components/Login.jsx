@@ -19,7 +19,7 @@ const Login = ({ setIsAuthenticated }) => {
     setErrorMessage('');
 
     try {
-      const response = await fetch("http://192.168.100.6:5000/api/auth/admin/login", {
+      const response = await fetch("https://api.ahorrovirtual.com/api/auth/admin/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

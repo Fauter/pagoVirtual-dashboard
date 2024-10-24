@@ -1,5 +1,6 @@
 
     import React, { useState, useEffect } from 'react';
+    import moment from 'moment';
     import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
     import axios from 'axios';
     import Login from './Login'; 
@@ -11,8 +12,16 @@
       const [loading, setLoading] = useState(true);
       const [openId, setOpenId] = useState(null);
       const [simulacionDias, setSimulacionDias] = useState(1);
+      const [fechaSimulada, setFechaSimulada] = useState(moment().format('YYYY-MM-DD'));
     
       useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+        setError('No hay token disponible. Debes iniciar sesión.');
+        return;
+        }
+        setIsAuthenticated(true);
+
         const fetchUsers = async () => {
           const token = localStorage.getItem('token');
           if (!token) {
@@ -21,7 +30,7 @@
           }
     
           try {
-            const response = await axios.get('http://192.168.100.6:5000/api/auth/users', {
+            const response = await axios.get('https://api.ahorrovirtual.com/api/auth/users', {
               headers: {
                 'x-auth-token': token,
               },
@@ -36,6 +45,8 @@
         fetchUsers();
       }, []);
 
+      if (error) return <div>{error}</div>;
+
       const toggleAhorros = (id) => {
         setOpenId(openId === id ? null : id);
       };
@@ -49,7 +60,7 @@
     
         try {
           const response = await axios.post(
-            'http://192.168.100.6:5000/api/simular-dia',
+            'https://api.ahorrovirtual.com/api/simular-dia',
             { dias: simulacionDias }, 
             {
               headers: {
@@ -58,12 +69,38 @@
             }
           );
           const nuevaFecha = response.data.fecha;
+          setFechaSimulada(nuevaFecha);
           alert('Simulación de día ejecutada: ' + nuevaFecha);
         } catch (error) {
           console.error('Error al simular el día:', error);
           setError('Error al simular el día: ' + (error.response?.data || error.message));
         }
       };
+
+      const resetDia = async () => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            setError('No hay token disponible. Debes iniciar sesión.');
+            return;
+        }
+        try {
+            const response = await axios.post(
+              'https://api.ahorrovirtual.com/api/reset-fecha',
+              {},
+              {
+                headers: {
+                  'x-auth-token': token,
+                },
+              }
+            );
+            const nuevaFecha = response.data.fecha;
+            setFechaSimulada(nuevaFecha);
+            alert('Fecha reseteada a: ' + nuevaFecha);
+          } catch (error) {
+              console.error('Error al resetear la fecha:', error);
+              setError('Error al resetear la fecha: ' + (error.response?.data || error.message));
+        }
+      }
 
       const eliminarAhorro = async (ahorroId) => {
         const token = localStorage.getItem("token");
@@ -73,7 +110,7 @@
         }
         console.log("Eliminando ahorro con ID:", ahorroId);
         try {
-            await axios.delete(`http://192.168.100.6:5000/api/auth/ahorros/todos/${ahorroId}`, {
+            await axios.delete(`https://api.ahorrovirtual.com/api/auth/ahorros/todos/${ahorroId}`, {
                 headers: {
                     'x-auth-token': token,
                 },
@@ -114,6 +151,13 @@
                                 >
                                     Simular Día
                                 </button>
+                                <button
+                                    onClick={resetDia}
+                                    className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+                                >
+                                    Reset Día
+                                </button>
+                                <div>{fechaSimulada}</div>
                             </div>
                         </div>
                         <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Usuarios</h2>
